@@ -11,7 +11,6 @@ todolists = []
 
 
 # REFACTOR THESE
-# also, the ID system sucks, maybe timestamps instead?
 def create_todolist_dict(todolist):
     json_dict = {}
     json_dict['id'] = todolist.id
@@ -68,7 +67,6 @@ class TodoListResource(Resource):
 
         # create a new list
         new_list = TodoList(content['name'], content['description'])
-        new_list.id = len(todolists)
         todolists.append(new_list)
 
         # we want to return the JSON representation of the list (including it's new ID)
@@ -163,7 +161,6 @@ class TodoItemResource(Resource):
             return None, 400
 
         new_item = TodoItem(task)
-        new_item.id = len(todolist.items)
         todolist.items.append(new_item)
 
         return make_response(jsonify(create_todoitem_dict(new_item)), 201)

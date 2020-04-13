@@ -15,17 +15,18 @@ def load_objects():
         new_list = TodoList(todolist['name'], todolist['description'])
         for task in todolist['items']:
             new_task = TodoItem(task['task'])
-            new_task.id = len(new_list.items)
             new_list.items.append(new_task)
 
-        new_list.id = len(my_lists)
         my_lists.append(new_list)
 
     for todolist in my_lists:
         todolist.print_list()
     return my_lists
 
-
+def create_id():
+    time_as_str = str(datetime.now().timestamp())
+    id_as_str = ''.join(time_as_str.split('.'))
+    return int(id_as_str)
 
 class TodoList:
 
@@ -33,7 +34,7 @@ class TodoList:
         self.name = name
         self.description = description
         self.items = []
-        self.id = None
+        self.id = create_id()
 
     def print_list(self):
         print(self.name)
@@ -57,7 +58,7 @@ class TodoItem:
     def __init__(self, task):
         self.task = task
         self.is_finished = False
-        self.id = None
+        self.id = create_id()
 
     def print_item(self):
         print(self.task)
