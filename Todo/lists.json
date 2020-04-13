@@ -1,0 +1,29 @@
+{
+
+    "lists": [
+        {
+            "name": "Groceries",
+            "description": "Going to the store!",
+            "items": [
+                {
+                    "task": "3x Apples"
+                },
+                {
+                    "task": "Oranges"
+                }
+            ]
+        },
+        {
+            "name": "Walmart",
+            "description": "Going to the other store!",
+            "items": [
+                {
+                    "task": "a TV"
+                },
+                {
+                    "task": "a hammer?"
+                }
+            ]
+        }
+    ]
+}
