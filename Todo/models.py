@@ -125,7 +125,7 @@ class TodoListContainer:
 
         return False
 
-    def search_list(self, name, description):
+    def search_lists(self, name, description):
         results = []
 
         for todolist in self.todolists:
