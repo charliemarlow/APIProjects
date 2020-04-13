@@ -52,6 +52,14 @@ class TodoList:
 
         return None
 
+    def create_dict(self):
+        list_dict = {}
+        list_dict['id'] = self.id
+        list_dict['name'] = self.name
+        list_dict['description'] = self.description
+
+        return list_dict
+
 
 class TodoItem:
 
@@ -63,3 +71,11 @@ class TodoItem:
     def print_item(self):
         print(self.task)
         print(self.is_finished)
+
+    def create_dict(self):
+        item_dict = {}
+        item_dict['id'] = self.id
+        item_dict['task'] = self.task
+        item_dict['isFinished'] = self.is_finished
+
+        return item_dict

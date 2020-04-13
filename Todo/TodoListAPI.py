@@ -54,7 +54,7 @@ class TodoListResource(Resource):
         description = request.args.get('description')
 
         for todo in todolists:
-            list_info = create_todolist_dict(todo)
+            list_info = todo.create_dict()
 
             if (name is None or todo.name == name) and (description is None or todo.description == description):
                 basic_todolists.append(list_info)
@@ -70,7 +70,7 @@ class TodoListResource(Resource):
         todolists.append(new_list)
 
         # we want to return the JSON representation of the list (including it's new ID)
-        json_list = create_todolist_dict(new_list)
+        json_list = new_list.create_dict()
         return make_response(jsonify(json_list), 201)
 
 api.add_resource(TodoListResource, api_url + 'todolists')
@@ -82,7 +82,7 @@ class SingleTodoListResource(Resource):
         todo = find_todolist(list_id)
 
         if todo:
-            return make_response(jsonify(create_todolist_dict(todo)), 200)
+            return make_response(jsonify(todo.create_dict()), 200)
         return None, 404
 
     def put(self, list_id):
@@ -102,7 +102,7 @@ class SingleTodoListResource(Resource):
         todo.name = name
         todo.description = description
 
-        return make_response(jsonify(create_todolist_dict(todo)), 200)
+        return make_response(jsonify(todo.create_dict()), 200)
 
     def patch(self, list_id):
         content = request.get_json()
@@ -119,7 +119,7 @@ class SingleTodoListResource(Resource):
         if description:
             todo.description = description
 
-        return make_response(jsonify(create_todolist_dict(todo)), 200)
+        return make_response(jsonify(todo.create_dict()), 200)
 
     def delete(self, list_id):
 
@@ -142,7 +142,7 @@ class TodoItemResource(Resource):
 
         todo_items = []
         for item in todolist.items:
-            todo_items.append(create_todoitem_dict(item))
+            todo_items.append(item.create_dict())
 
         return make_response(jsonify(todo_items), 200)
 
@@ -163,7 +163,7 @@ class TodoItemResource(Resource):
         new_item = TodoItem(task)
         todolist.items.append(new_item)
 
-        return make_response(jsonify(create_todoitem_dict(new_item)), 201)
+        return make_response(jsonify(new_item.create_dict()), 201)
 
 api.add_resource(TodoItemResource, api_url + 'todolists/<int:list_id>/todoitems')
 
@@ -173,7 +173,7 @@ class SingleTodoItemResource(Resource):
         # return the specific item and info
         item = find_todolist_item(list_id, item_id)
         if item:
-            return make_response(jsonify(create_todoitem_dict(item)), 200)
+            return make_response(jsonify(item.create_dict()), 200)
         return None, 404
 
     def put(self, list_id, item_id):
@@ -194,7 +194,7 @@ class SingleTodoItemResource(Resource):
         item.task = task
         item.is_finished = is_finished
 
-        return make_response(jsonify(create_todoitem_dict(item)), 200)
+        return make_response(jsonify(item.create_dict()), 200)
 
     def patch(self, list_id, item_id):
         # update either task name or finished state
@@ -214,7 +214,7 @@ class SingleTodoItemResource(Resource):
         if is_finished == True or is_finished == False:
             item.is_finished = is_finished
 
-        return make_response(jsonify(create_todoitem_dict(item)), 200)
+        return make_response(jsonify(item.create_dict()), 200)
 
     def delete(self, list_id, item_id):
         # delete the item from the list
