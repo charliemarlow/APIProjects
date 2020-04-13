@@ -9,24 +9,6 @@ api = Api(app)
 api_url = '/api/v1/'
 todolists = []
 
-
-# REFACTOR THESE
-def create_todolist_dict(todolist):
-    json_dict = {}
-    json_dict['id'] = todolist.id
-    json_dict['name'] = todolist.name
-    json_dict['description'] = todolist.description
-
-    return json_dict
-
-def create_todoitem_dict(todoitem):
-    json_dict = {}
-    json_dict['task'] = todoitem.task
-    json_dict['id'] = todoitem.id
-    json_dict['isFinished'] = todoitem.is_finished
-
-    return json_dict
-
 def find_todolist(list_id):
 
     for todo in todolists:
@@ -48,7 +30,9 @@ class TodoListResource(Resource):
     def get(self):
         # need to build a list of dictionaries of basic info
         basic_todolists = []
-        # we aren't giving away the full list, because it's assumed the API user just wants to see high level info in this call and will request more info later
+        # we aren't giving away the full list, because it's assumed the API
+        # user just wants to see high level info in this call and will request
+        # more info later
 
         name = request.args.get('name')
         description = request.args.get('description')
@@ -56,7 +40,8 @@ class TodoListResource(Resource):
         for todo in todolists:
             list_info = todo.create_dict()
 
-            if (name is None or todo.name == name) and (description is None or todo.description == description):
+            if ((name is None or todo.name == name) and
+                (description is None or todo.description == description)):
                 basic_todolists.append(list_info)
 
         return make_response(jsonify(basic_todolists), 201)
@@ -69,7 +54,7 @@ class TodoListResource(Resource):
         new_list = TodoList(content['name'], content['description'])
         todolists.append(new_list)
 
-        # we want to return the JSON representation of the list (including it's new ID)
+        # we want to return the JSON representation of the list
         json_list = new_list.create_dict()
         return make_response(jsonify(json_list), 201)
 
