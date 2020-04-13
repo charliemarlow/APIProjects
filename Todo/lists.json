@@ -2,26 +2,26 @@
 
     "lists": [
         {
-            "name": "Groceries",
-            "description": "Going to the store!",
+            "name": "Costco",
+            "description": "A grocery/everything list for Costco",
             "items": [
                 {
-                    "task": "3x Apples"
+                    "task": "pasta"
                 },
                 {
-                    "task": "Oranges"
+                    "task": "rice"
                 }
             ]
         },
         {
             "name": "Walmart",
-            "description": "Going to the other store!",
+            "description": "A shopping list for Walmart",
             "items": [
                 {
-                    "task": "a TV"
+                    "task": "hand sanitizer"
                 },
                 {
-                    "task": "a hammer?"
+                    "task": "disinfectant wipes"
                 }
             ]
         }
