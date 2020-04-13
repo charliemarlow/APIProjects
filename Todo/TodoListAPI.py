@@ -1,7 +1,7 @@
 
 from flask import Flask, jsonify, request, make_response
 from flask_restful import Resource, Api
-from models import TodoList, TodoItem, TodoListContainer
+from models import TodoListContainer
 
 app = Flask(__name__)
 api = Api(app)
@@ -29,8 +29,7 @@ class TodoListResource(Resource):
         if not content['name'] or not content['description']:
             return None, 400
 
-        new_list = TodoList(content['name'], content['description'])
-        todo_data.add_list(new_list)
+        todo_data.add_list(content['name'], content['description'])
 
         return make_response(jsonify(new_list.create_dict()), 201)
 
@@ -123,8 +122,7 @@ class TodoItemResource(Resource):
         if not task:
             return None, 400
 
-        new_item = TodoItem(task)
-        todolist.items.append(new_item)
+        new_item = todolist.add_item(task)
 
         return make_response(jsonify(new_item.create_dict()), 201)
 
