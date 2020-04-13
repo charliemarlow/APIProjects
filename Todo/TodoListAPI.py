@@ -91,6 +91,7 @@ class SingleTodoListResource(Resource):
     def delete(self, list_id):
         if todo_data.delete_list(list_id):
             return None, 204
+
         return None, 404
 
 
@@ -194,6 +195,7 @@ class SingleTodoItemResource(Resource):
 
         if todolist.delete_item(item_id):
             return None, 204
+
         return None, 404
 
 
