@@ -12,27 +12,26 @@ todo_data = TodoListContainer('lists.json')
 
 class TodoListResource(Resource):
     def get(self):
-        # need to build a list of dictionaries of basic info
-        basic_todolists = []
-        # we aren't giving away the full list, because it's assumed the API
-        # user just wants to see high level info in this call and will request
-        # more info later
-
+        # return the lists that match the query params
+        # the query params are optional
         name = request.args.get('name')
         description = request.args.get('description')
 
-        basic_todolists = todo_data.search_list(name, description)
+        # search_list handles validating the query params
+        # if both are none, all the lists are provided
+        basic_todolists = todo_data.search_lists(name, description)
         return make_response(jsonify(basic_todolists), 201)
 
     def post(self):
-        # take arguments as json
+        # create a new list from JSON provided by user
         content = request.get_json()
 
-        # create a new list
+        if not content['name'] or not content['description']:
+            return None, 400
+
         new_list = TodoList(content['name'], content['description'])
         todo_data.add_list(new_list)
 
-        # we want to return the JSON representation of the list
         return make_response(jsonify(new_list.create_dict()), 201)
 
 
@@ -42,51 +41,54 @@ api.add_resource(TodoListResource, api_url + 'todolists')
 class SingleTodoListResource(Resource):
 
     def get(self, list_id):
-        # need to search the list for the specific list
+        # Return the info for a specific list
         todo = todo_data.find_list(list_id)
 
-        if todo:
-            return make_response(jsonify(todo.create_dict()), 200)
-        return None, 404
+        if not todo:
+            return None, 404
+        return make_response(jsonify(todo.create_dict()), 200)
 
     def put(self, list_id):
-        # fully update the list info
+        # Update the list information
         content = request.get_json()
         name = content.get('name')
         description = content.get('description')
 
+        # all data must be filled out in the JSON
         if not name or not description:
             return None, 400
 
-        todo = todo_data.find_list(list_id)
+        todolist = todo_data.find_list(list_id)
 
-        if not todo:
+        if not todolist:
             return None, 404
 
-        todo.name = name
-        todo.description = description
+        # update the model
+        todolist.name = name
+        todolist.description = description
 
-        return make_response(jsonify(todo.create_dict()), 200)
+        return make_response(jsonify(todolist.create_dict()), 200)
 
     def patch(self, list_id):
+        # update todolist with partial information
         content = request.get_json()
         name = content.get('name')
         description = content.get('description')
 
-        todo = todo_data.find_list(list_id)
+        todolist = todo_data.find_list(list_id)
 
-        if not todo:
+        if not todolist:
             return None, 404
 
+        # only update the information provided
         if name:
-            todo.name = name
+            todolist.name = name
         if description:
-            todo.description = description
+            todolist.description = description
 
-        return make_response(jsonify(todo.create_dict()), 200)
+        return make_response(jsonify(todolist.create_dict()), 200)
 
     def delete(self, list_id):
-
         if todo_data.delete_list(list_id):
             return None, 204
         return None, 404
@@ -98,26 +100,23 @@ api.add_resource(SingleTodoListResource, api_url + 'todolists/<int:list_id>')
 class TodoItemResource(Resource):
 
     def get(self, list_id):
+        # Get all todo items for a given list
         todolist = todo_data.find_list(list_id)
 
         if not todolist:
             return None, 400
 
-        todo_items = []
-        for item in todolist.items:
-            todo_items.append(item.create_dict())
-
-        return make_response(jsonify(todo_items), 200)
+        todo_items = map(lambda item: item.create_dict(), todolist.items)
+        return make_response(jsonify(list(todo_items)), 200)
 
     def post(self, list_id):
-        # create a new todo item
+        # create a new todo item with user's JSON
         todolist = todo_data.find_list(list_id)
 
         if not todolist:
             return None, 404
 
         content = request.get_json()
-
         task = content.get('task')
 
         if not task:
@@ -136,11 +135,13 @@ api.add_resource(TodoItemResource, api_url +
 class SingleTodoItemResource(Resource):
 
     def get(self, list_id, item_id):
-        # return the specific item and info
+        # return the specific todo item
         item = todo_data.find_list_item(list_id, item_id)
-        if item:
-            return make_response(jsonify(item.create_dict()), 200)
-        return None, 404
+
+        if not item:
+            return None, 404
+
+        return make_response(jsonify(item.create_dict()), 200)
 
     def put(self, list_id, item_id):
         # update all info on a task (i.e. task, is_finished)
@@ -149,7 +150,7 @@ class SingleTodoItemResource(Resource):
         task = content.get('task')
         is_finished = content.get('isFinished')
 
-        if task is None or (is_finished != True or is_finished != False):
+        if task is None or not isinstance(is_finished, bool):
             return None, 400
 
         item = todo_data.find_list_item(list_id, item_id)
@@ -157,6 +158,7 @@ class SingleTodoItemResource(Resource):
         if not item:
             return None, 404
 
+        # update all info
         item.task = task
         item.is_finished = is_finished
 
@@ -175,9 +177,10 @@ class SingleTodoItemResource(Resource):
         if not item:
             return None, 404
 
+        # update the info that was provided
         if task:
             item.task = task
-        if is_finished == True or is_finished == False:
+        if isinstance(is_finished, bool):
             item.is_finished = is_finished
 
         return make_response(jsonify(item.create_dict()), 200)
