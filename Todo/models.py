@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from abc import ABC, abstractmethod
 
 def load_objects():
     todolists_dict = {}
@@ -20,32 +21,41 @@ def load_objects():
         my_lists.append(new_list)
 
     for todolist in my_lists:
-        todolist.print_list()
+        todolist.print_model()
     return my_lists
 
-def create_id():
-    time_as_str = str(datetime.now().timestamp())
-    id_as_str = ''.join(time_as_str.split('.'))
-    return int(id_as_str)
+class Model(ABC):
 
-class TodoList:
+    @abstractmethod
+    def print_model(self):
+        pass
+
+    @abstractmethod
+    def create_dict(self):
+        pass
+
+    def create_id(self):
+        time_as_str = str(datetime.now().timestamp())
+        id_as_str = ''.join(time_as_str.split('.'))
+        return int(id_as_str)
+
+class TodoList(Model):
 
     def __init__(self, name, description):
         self.name = name
         self.description = description
         self.items = []
-        self.id = create_id()
+        self.id = self.create_id()
 
-    def print_list(self):
+    def print_model(self):
         print(self.name)
         print(self.description)
         for task in self.items:
             print('Task: ', end='')
-            task.print_item()
+            task.print_model()
         print(" ")
 
     def find_item(self, item_id):
-
         for item in self.items:
             if item.id == item_id:
                 return item
@@ -60,15 +70,14 @@ class TodoList:
 
         return list_dict
 
-
-class TodoItem:
+class TodoItem(Model):
 
     def __init__(self, task):
         self.task = task
         self.is_finished = False
-        self.id = create_id()
+        self.id = self.create_id()
 
-    def print_item(self):
+    def print_model(self):
         print(self.task)
         print(self.is_finished)
 
