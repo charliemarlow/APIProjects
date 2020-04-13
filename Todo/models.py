@@ -28,12 +28,13 @@ class TodoList(Model):
         self.id = self.create_id()
 
     def print_model(self):
-        print(self.name)
-        print(self.description)
+        print('List: {}'.format(self.name))
+        print('Description: {}'.format(self.description))
+
         for task in self.items:
-            print('Task: ', end='')
             task.print_model()
-        print(" ")
+
+        print(' ')
 
     def find_item(self, item_id):
         for item in self.items:
@@ -67,8 +68,8 @@ class TodoItem(Model):
         self.id = self.create_id()
 
     def print_model(self):
-        print(self.task)
-        print(self.is_finished)
+        status = 'Finished' if self.is_finished else 'Not finished'
+        print('Task: {}, Status: {}'.format(self.task, status))
 
     def create_dict(self):
         item_dict = {}
@@ -82,7 +83,6 @@ class TodoItem(Model):
 class TodoListContainer:
 
     def __init__(self, filepath):
-
         with open(filepath, 'r') as f:
             todolists_dict = json.load(f)
 
@@ -118,10 +118,10 @@ class TodoListContainer:
         return todolist.find_item(item_id)
 
     def add_list(self, todolist):
-        self.todolists.append(todolist)
+        if todolist is not None:
+            self.todolists.append(todolist)
 
     def delete_list(self, list_id):
-
         for i in range(len(self.todolists)):
             if self.todolists[i].id == list_id:
                 del self.todolists[i]
@@ -133,10 +133,8 @@ class TodoListContainer:
         results = []
 
         for todolist in self.todolists:
-            list_info = todolist.create_dict()
-
             if ((name is None or todolist.name == name) and
                     (description is None or todolist.description == description)):
-                results.append(list_info)
+                results.append(todolist.create_dict())
 
         return results
