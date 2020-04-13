@@ -9,6 +9,7 @@ api = Api(app)
 api_url = '/api/v1/'
 todo_data = TodoListContainer('lists.json')
 
+
 class TodoListResource(Resource):
     def get(self):
         # need to build a list of dictionaries of basic info
@@ -34,7 +35,9 @@ class TodoListResource(Resource):
         # we want to return the JSON representation of the list
         return make_response(jsonify(new_list.create_dict()), 201)
 
+
 api.add_resource(TodoListResource, api_url + 'todolists')
+
 
 class SingleTodoListResource(Resource):
 
@@ -88,7 +91,9 @@ class SingleTodoListResource(Resource):
             return None, 204
         return None, 404
 
+
 api.add_resource(SingleTodoListResource, api_url + 'todolists/<int:list_id>')
+
 
 class TodoItemResource(Resource):
 
@@ -123,7 +128,10 @@ class TodoItemResource(Resource):
 
         return make_response(jsonify(new_item.create_dict()), 201)
 
-api.add_resource(TodoItemResource, api_url + 'todolists/<int:list_id>/todoitems')
+
+api.add_resource(TodoItemResource, api_url +
+                 'todolists/<int:list_id>/todoitems')
+
 
 class SingleTodoItemResource(Resource):
 
@@ -185,6 +193,8 @@ class SingleTodoItemResource(Resource):
             return None, 204
         return None, 404
 
-api.add_resource(SingleTodoItemResource, api_url + 'todolists/<int:list_id>/todoitems/<int:item_id>')
+
+api.add_resource(SingleTodoItemResource, api_url +
+                 'todolists/<int:list_id>/todoitems/<int:item_id>')
 
 app.run(debug=True)

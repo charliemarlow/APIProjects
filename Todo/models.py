@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from abc import ABC, abstractmethod
 
+
 class Model(ABC):
 
     @abstractmethod
@@ -16,6 +17,7 @@ class Model(ABC):
         time_as_str = str(datetime.now().timestamp())
         id_as_str = ''.join(time_as_str.split('.'))
         return int(id_as_str)
+
 
 class TodoList(Model):
 
@@ -56,6 +58,7 @@ class TodoList(Model):
 
         return list_dict
 
+
 class TodoItem(Model):
 
     def __init__(self, task):
@@ -74,6 +77,7 @@ class TodoItem(Model):
         item_dict['isFinished'] = self.is_finished
 
         return item_dict
+
 
 class TodoListContainer:
 
@@ -132,7 +136,7 @@ class TodoListContainer:
             list_info = todolist.create_dict()
 
             if ((name is None or todolist.name == name) and
-                (description is None or todolist.description == description)):
+                    (description is None or todolist.description == description)):
                 results.append(list_info)
 
         return results
