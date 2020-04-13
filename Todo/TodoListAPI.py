@@ -29,7 +29,7 @@ class TodoListResource(Resource):
         if not content['name'] or not content['description']:
             return None, 400
 
-        todo_data.add_list(content['name'], content['description'])
+        new_list = todo_data.add_list(content['name'], content['description'])
 
         return make_response(jsonify(new_list.create_dict()), 201)
 
