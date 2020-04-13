@@ -1,30 +1,13 @@
 
 from flask import Flask, jsonify, request, make_response
 from flask_restful import Resource, Api
-from models import TodoList, TodoItem, load_objects
+from models import TodoList, TodoItem, TodoListContainer
 
 app = Flask(__name__)
 api = Api(app)
 
 api_url = '/api/v1/'
-todolists = []
-
-def find_todolist(list_id):
-
-    for todo in todolists:
-        if todo.id == list_id:
-            return todo
-
-    return None
-
-def find_todolist_item(list_id, item_id):
-    todolist = find_todolist(list_id)
-
-    if not todolist:
-        return None
-
-    # will return None if not found
-    return todolist.find_item(item_id)
+todo_data = TodoListContainer('lists.json')
 
 class TodoListResource(Resource):
     def get(self):
@@ -37,13 +20,7 @@ class TodoListResource(Resource):
         name = request.args.get('name')
         description = request.args.get('description')
 
-        for todo in todolists:
-            list_info = todo.create_dict()
-
-            if ((name is None or todo.name == name) and
-                (description is None or todo.description == description)):
-                basic_todolists.append(list_info)
-
+        basic_todolists = todo_data.search_list(name, description)
         return make_response(jsonify(basic_todolists), 201)
 
     def post(self):
@@ -52,11 +29,10 @@ class TodoListResource(Resource):
 
         # create a new list
         new_list = TodoList(content['name'], content['description'])
-        todolists.append(new_list)
+        todo_data.add_list(new_list)
 
         # we want to return the JSON representation of the list
-        json_list = new_list.create_dict()
-        return make_response(jsonify(json_list), 201)
+        return make_response(jsonify(new_list.create_dict()), 201)
 
 api.add_resource(TodoListResource, api_url + 'todolists')
 
@@ -64,7 +40,7 @@ class SingleTodoListResource(Resource):
 
     def get(self, list_id):
         # need to search the list for the specific list
-        todo = find_todolist(list_id)
+        todo = todo_data.find_list(list_id)
 
         if todo:
             return make_response(jsonify(todo.create_dict()), 200)
@@ -79,7 +55,7 @@ class SingleTodoListResource(Resource):
         if not name or not description:
             return None, 400
 
-        todo = find_todolist(list_id)
+        todo = todo_data.find_list(list_id)
 
         if not todo:
             return None, 404
@@ -94,7 +70,7 @@ class SingleTodoListResource(Resource):
         name = content.get('name')
         description = content.get('description')
 
-        todo = find_todolist(list_id)
+        todo = todo_data.find_list(list_id)
 
         if not todo:
             return None, 404
@@ -108,11 +84,8 @@ class SingleTodoListResource(Resource):
 
     def delete(self, list_id):
 
-        for i in range(len(todolists)):
-            if todolists[i].id == list_id:
-                del todolists[i]
-                return None, 204
-
+        if todo_data.delete_list(list_id):
+            return None, 204
         return None, 404
 
 api.add_resource(SingleTodoListResource, api_url + 'todolists/<int:list_id>')
@@ -120,7 +93,7 @@ api.add_resource(SingleTodoListResource, api_url + 'todolists/<int:list_id>')
 class TodoItemResource(Resource):
 
     def get(self, list_id):
-        todolist = find_todolist(list_id)
+        todolist = todo_data.find_list(list_id)
 
         if not todolist:
             return None, 400
@@ -133,7 +106,7 @@ class TodoItemResource(Resource):
 
     def post(self, list_id):
         # create a new todo item
-        todolist = find_todolist(list_id)
+        todolist = todo_data.find_list(list_id)
 
         if not todolist:
             return None, 404
@@ -156,7 +129,7 @@ class SingleTodoItemResource(Resource):
 
     def get(self, list_id, item_id):
         # return the specific item and info
-        item = find_todolist_item(list_id, item_id)
+        item = todo_data.find_list_item(list_id, item_id)
         if item:
             return make_response(jsonify(item.create_dict()), 200)
         return None, 404
@@ -171,7 +144,7 @@ class SingleTodoItemResource(Resource):
         if task is None or (is_finished != True or is_finished != False):
             return None, 400
 
-        item = find_todolist_item(list_id, item_id)
+        item = todo_data.find_list_item(list_id, item_id)
 
         if not item:
             return None, 404
@@ -189,7 +162,7 @@ class SingleTodoItemResource(Resource):
         task = content.get('task')
         is_finished = content.get('isFinished')
 
-        item = find_todolist_item(list_id, item_id)
+        item = todo_data.find_list_item(list_id, item_id)
 
         if not item:
             return None, 404
@@ -203,19 +176,15 @@ class SingleTodoItemResource(Resource):
 
     def delete(self, list_id, item_id):
         # delete the item from the list
-        todolist = find_todolist(list_id)
+        todolist = todo_data.find_list(list_id)
 
         if not todolist:
             return None, 404
 
-        for i in range(len(todolist.items)):
-            if todolist.items[i].id == item_id:
-                del todolist.items[i]
-                return None, 204
-
+        if todolist.delete_item(item_id):
+            return None, 204
         return None, 404
 
 api.add_resource(SingleTodoItemResource, api_url + 'todolists/<int:list_id>/todoitems/<int:item_id>')
 
-todolists = load_objects()
 app.run(debug=True)
