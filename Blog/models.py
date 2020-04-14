@@ -8,16 +8,17 @@ class BlogPosts:
 
     def __init__(self, blogs_json, user_data):
         self.next_post_id = 0
-        self.user_data = user_data
-        self.posts = self.load_posts(blogs_json)
+        self.posts = []
+        self.load_posts(blogs_json, user_data)
 
-    def load_posts(self, json_file):
+    def load_posts(self, json_file, user_data):
         with open(json_file) as f:
             posts = json.load(f)
 
         for post in posts:
             user = user_data.find_user(post['userID'])
-            new_post = self.add_post(user, post['content'], post['title'])
+            self.add_post(user, post['content'], post['title'])
+            new_post = self.posts[-1]
 
             for post_like in post['likes']:
                 like_user = user_data.find_user(post_like['userID'])
@@ -30,7 +31,7 @@ class BlogPosts:
                 for comment_like in comment['likes']:
                     comment_like_user = user_data.find_user(comment_like['userID'])
                     new_comment.add_like(comment_like_user)
-        
+
 
     def add_post(self, user, content, title):
         new_post = Post(user, content, title, self.next_post_id)
@@ -335,8 +336,8 @@ class Like(JSONReturnable):
 
 class Post(Text, JSONReturnable):
 
-    def __init__(self, user, content, title):
-        super.__init__(user, content)
+    def __init__(self, user, content, title, id):
+        super().__init__(user, content, id)
         self.title = title
         self.comments = []
         self.next_comment_id = 0
@@ -379,7 +380,7 @@ class Post(Text, JSONReturnable):
 class Comment(Text, JSONReturnable):
 
     def __init__(self, user, content, id):
-        super.__init__(user, content, id)
+        super().__init__(user, content, id)
 
     def create_dict(self):
         info = {}
