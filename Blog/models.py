@@ -203,6 +203,18 @@ class BlogUsers:
 
         return user
 
+    def verify_json(self, data):
+
+        has_user_info = data.get('name') and data.get('about') and data.get('profileImage')
+        has_social_info = True
+
+        if data.get('socialMedia'):
+            for social in data.get('socialMedia'):
+                if social.get('id') is None or not social.get('network') or not social.get('url') or not social.get('icon'):
+                    has_social_info =  False
+
+        return has_user_info and has_social_info
+
 
 
 class JSONReturnable(ABC):
@@ -255,7 +267,7 @@ class User(JSONReturnable):
     def find_social(self, social_id):
         for i in range(len(self.social_medias)):
             if self.social_medias[i].id == social_id:
-                return self.social_medias[i].create_dict()
+                return self.social_medias[i]
 
         return None
 
