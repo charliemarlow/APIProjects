@@ -1,0 +1,52 @@
+[
+    {
+        "title": "Quarantine and the Golden Age of TikTok",
+        "content": "Lorem ipsum dipsum",
+        "userID": 0,
+        "likes": [
+            {
+                "userID": 0
+            },
+            {
+                "userID": 1
+            }
+        ],
+        "comments": [
+            {
+                "userID": 1,
+                "content": "Nice post",
+                "likes": [
+                    {
+                        "userID": 0
+                    }
+                ]
+            }
+        ]
+    },
+
+    {
+        "title": "Stonks and The Quarantine",
+        "content": "Lorem ipsum dipsum",
+        "userID": 1,
+        "likes": [
+            {
+                "userID": 1
+            },
+            {
+                "userID": 0
+            }
+        ],
+        "comments": [
+            {
+                "userID": 0,
+                "content": "Nice post!! Cool!",
+                "likes": [
+                    {
+                        "userID": 1
+                    }
+                ]
+            }
+        ]
+    }
+
+]

@@ -6,12 +6,31 @@ from abc import ABC, abstractmethod
 # Interface for data about blogs
 class BlogPosts:
 
-    def __init__(self, blogs_json):
+    def __init__(self, blogs_json, user_data):
         self.next_post_id = 0
+        self.user_data = user_data
         self.posts = self.load_posts(blogs_json)
 
     def load_posts(self, json_file):
-        pass
+        with open(json_file) as f:
+            posts = json.load(f)
+
+        for post in posts:
+            user = user_data.find_user(post['userID'])
+            new_post = self.add_post(user, post['content'], post['title'])
+
+            for post_like in post['likes']:
+                like_user = user_data.find_user(post_like['userID'])
+                new_post.add_like(like_user)
+
+            for comment in post['comments']:
+                comment_user = user_data.find_user(comment['userID'])
+                new_comment = new_post.add_comment(comment_user, comment['content'])
+
+                for comment_like in comment['likes']:
+                    comment_like_user = user_data.find_user(comment_like['userID'])
+                    new_comment.add_like(comment_like_user)
+        
 
     def add_post(self, user, content, title):
         new_post = Post(user, content, title, self.next_post_id)
@@ -134,10 +153,18 @@ class BlogUsers:
 
     def __init__(self, users_json):
         self.next_user_id = 0
-        self.users = self.load_users(users_json)
+        self.users = []
+        self.load_users(users_json)
 
     def load_users(self, json_file):
-        pass
+        with open(json_file) as f:
+            users = json.load(f)
+
+        for user in users:
+            new_user = self.add_user(user['name'], user['about'], user['profileImage'])
+
+            for media in user['socialMedia']:
+                new_user.add_social(media['network'], media['url'], media['icon'])
 
     def add_user(self, name, about, profile_image):
         new_user = User(name, about, profile_image, self.next_user_id)

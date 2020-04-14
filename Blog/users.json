@@ -1,0 +1,38 @@
+[
+    {
+        "name": "Charlie Marlow",
+        "about": "Unprofessional blogger",
+        "profileImage": "IMAGE HERE",
+        "socialMedia":[
+            {
+                "network": "Instagram",
+                "url": "instagram.com",
+                "icon": "IMAGE HERE"
+            },
+            {
+                "network": "Twitter",
+                "url": "instagram.com",
+                "icon": "IMAGE HERE"
+            }
+        ]
+
+    },
+    {
+        "name": "Watson Marlow",
+        "about": "Very professional blogger",
+        "profileImage": "IMAGE HERE",
+        "socialMedia":[
+            {
+                "network": "Instagram",
+                "url": "instagram.com/professional",
+                "icon": "IMAGE HERE"
+            },
+            {
+                "network": "Twitter",
+                "url": "instagram.com/superprofessional",
+                "icon": "IMAGE HERE"
+            }
+        ]
+
+    }
+]
