@@ -9,6 +9,10 @@ For the convenience of testing, all object ID's are basic incremental counters
 This is only done to make testing with Postman easy and quick
 '''
 
+def create_timestamp():
+    return datetime.now().isoformat()
+
+
 class BlogUsers:
     '''
     Interface for api.py
@@ -300,7 +304,7 @@ class Text(ABC):
 
     def __init__(self, user, content, id):
         self.user = user
-        self.date_posted = datetime.now().timestamp()
+        self.date_posted = create_timestamp()
         self.likes = []
         self.content = content
         self.id = id
@@ -337,7 +341,7 @@ class Text(ABC):
 class Like(JSONReturnable):
     def __init__(self, user, text):
         self.user = user
-        self.date_posted = datetime.now().timestamp()
+        self.date_posted = create_timestamp()
         self.text_id = text.id
 
     def create_dict(self):
