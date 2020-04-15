@@ -1,29 +1,42 @@
 from flask import Flask, jsonify, make_response, request
 from flask_restful import Resource, Api
-from models import BlogPosts, BlogUsers
+from models import BlogUsers
 
 app = Flask(__name__)
 api = Api(app)
 
 api_url = '/blogr/api/v1/'
 
-user_data = BlogUsers('users.json', 'posts.json')
+# loads the global object used to access the backend
+blog_data = BlogUsers('users.json', 'posts.json')
+
+
+'''
+This the meat of the API, it handles updating the objects,
+and communicating with the client
+
+It uses the blog_data object to interact with the "backend"
+It is assumed the dev knows the interface for each object but not the internals
+'''
 
 
 class UsersResource(Resource):
     def get(self):
-        user_dicts = map(lambda user: user.create_dict(), user_data.users)
+        user_dicts = map(lambda user: user.create_dict(), blog_data.users)
         return make_response(jsonify(list(user_dicts)), 200)
 
     def post(self):
         data = request.get_json()
 
-        if not user_data.verify_json(data):
+        # make sure all data is correct before altering any data
+        if not blog_data.verify_json(data):
             return None, 400
 
-        new_user = user_data.add_user(
+        # create a new user
+        new_user = blog_data.add_user(
             data['name'], data['about'], data['profileImage'])
 
+        # socialMedia is optional when creating a new user
         if data.get('socialMedia'):
             for social in data['socialMedia']:
                 new_user.add_social(
@@ -39,17 +52,21 @@ api.add_resource(UsersResource, api_url + 'users')
 
 class SingleUserResource(Resource):
     def get(self, user_id):
-        user = user_data.find_user(user_id)
+        user = blog_data.find_user(user_id)
+
+        if not user:
+            return None, 404
+
         return user.create_dict(), 200
 
     def put(self, user_id):
         # verify ALL inputs
         data = request.get_json()
 
-        if not user_data.verify_json(data, is_update=True):
+        if not blog_data.verify_json(data, is_update=True):
             return None, 400
 
-        user = user_data.update_user(
+        user = blog_data.update_user(
             user_id,
             data['name'],
             data['about'],
@@ -68,7 +85,7 @@ class SingleUserResource(Resource):
     def patch(self, user_id):
         data = request.get_json()
 
-        user = user_data.update_user(
+        user = blog_data.update_user(
             user_id,
             data.get('name'),
             data.get('about'),
@@ -86,7 +103,7 @@ class SingleUserResource(Resource):
         return user.create_dict(), 200
 
     def delete(self, user_id):
-        if user_data.delete_user(user_id):
+        if blog_data.delete_user(user_id):
             return None, 204
         return None, 404
 
@@ -96,16 +113,17 @@ api.add_resource(SingleUserResource, api_url + 'users/<int:user_id>')
 
 class PostsResource(Resource):
     def get(self, user_id):
-        user = user_data.find_user(user_id)
+        user = blog_data.find_user(user_id)
 
         if not user:
             return None, 404
 
         posts = user.posts
 
+        # allow for searching by post title in query params
         if request.args.get('title'):
-            posts = filter(lambda post: post.title ==
-                           request.args['title'], posts)
+            posts = filter(lambda post: post.title == request.args['title'],
+                           posts)
 
         posts = map(lambda post: post.create_dict(), posts)
         return make_response(jsonify(list(posts)), 200)
@@ -113,10 +131,10 @@ class PostsResource(Resource):
     def post(self, user_id):
         data = request.get_json()
 
-        if user_data.is_invalid_post(data):
+        if blog_data.is_invalid_post(data):
             return None, 400
 
-        author = user_data.find_user(user_id)
+        author = blog_data.find_user(user_id)
 
         if not author:
             return None, 404
@@ -132,7 +150,7 @@ api.add_resource(PostsResource, api_url + 'users/<int:user_id>/posts')
 class SinglePostResource(Resource):
     def get(self, user_id, post_id):
 
-        post = user_data.find_post(user_id, post_id)
+        post = blog_data.find_post(user_id, post_id)
 
         if not post:
             return None, 404
@@ -142,10 +160,10 @@ class SinglePostResource(Resource):
     def put(self, user_id, post_id):
         data = request.get_json()
 
-        if user_data.is_invalid_post(data):
+        if blog_data.is_invalid_post(data):
             return None, 400
 
-        author = user_data.find_user(user_id)
+        author = blog_data.find_user(user_id)
 
         if not author:
             return None, 404
@@ -163,7 +181,7 @@ class SinglePostResource(Resource):
     def patch(self, user_id, post_id):
         data = request.get_json()
 
-        author = user_data.find_user(user_id)
+        author = blog_data.find_user(user_id)
 
         if not author:
             return None, 404
@@ -176,7 +194,7 @@ class SinglePostResource(Resource):
         return post.create_dict(), 201
 
     def delete(self, user_id, post_id):
-        user = user_data.find_user(user_id)
+        user = blog_data.find_user(user_id)
 
         if not user:
             return None, 404
@@ -192,7 +210,7 @@ api.add_resource(SinglePostResource, api_url +
 
 class PostLikesResource(Resource):
     def get(self, user_id, post_id):
-        post = user_data.find_post(user_id, post_id)
+        post = blog_data.find_post(user_id, post_id)
 
         if not post:
             return None, 404
@@ -206,12 +224,12 @@ class PostLikesResource(Resource):
         if 'userID' not in data:
             return "userID not provided in JSON", 400
 
-        post = user_data.find_post(user_id, post_id)
+        post = blog_data.find_post(user_id, post_id)
 
         if not post:
             return "Blog post not found", 404
 
-        like_user = user_data.find_user(user_id)
+        like_user = blog_data.find_user(user_id)
 
         if not like_user:
             return None, 404
@@ -230,7 +248,7 @@ api.add_resource(PostLikesResource, api_url +
 
 class SinglePostLikeResource(Resource):
     def get(self, user_id, post_id, like_user_id):
-        post = user_data.find_post(user_id, post_id)
+        post = blog_data.find_post(user_id, post_id)
 
         if not post:
             return "Blog post not found", 404
@@ -243,7 +261,7 @@ class SinglePostLikeResource(Resource):
         return like.create_dict(), 200
 
     def delete(self, user_id, post_id, like_user_id):
-        post = user_data.find_post(user_id, post_id)
+        post = blog_data.find_post(user_id, post_id)
 
         if not post:
             return "Blog post not found", 404
@@ -261,7 +279,7 @@ api.add_resource(
 
 class CommentsResource(Resource):
     def get(self, user_id, post_id):
-        post = user_data.find_post(user_id, post_id)
+        post = blog_data.find_post(user_id, post_id)
 
         if not post:
             return None, 404
@@ -276,12 +294,12 @@ class CommentsResource(Resource):
         if 'content' not in data or 'userID' not in data:
             return None, 400
 
-        post = user_data.find_post(user_id, post_id)
+        post = blog_data.find_post(user_id, post_id)
 
         if not post:
             return None, 404
 
-        comment_author = user_data.find_user(data['userID'])
+        comment_author = blog_data.find_user(data['userID'])
 
         if not comment_author:
             return None, 400
@@ -297,7 +315,7 @@ api.add_resource(CommentsResource, api_url +
 
 class SingleCommentResource(Resource):
     def get(self, user_id, post_id, comment_id):
-        comment = user_data.find_comment(user_id, post_id, comment_id)
+        comment = blog_data.find_comment(user_id, post_id, comment_id)
 
         if not comment:
             return None, 404
@@ -310,7 +328,7 @@ class SingleCommentResource(Resource):
         if 'content' not in data:
             return None, 400
 
-        comment = user_data.find_comment(user_id, post_id, comment_id)
+        comment = blog_data.find_comment(user_id, post_id, comment_id)
 
         if not comment:
             return None, 404
@@ -321,7 +339,7 @@ class SingleCommentResource(Resource):
     def patch(self, user_id, post_id, comment_id):
         data = request.get_json()
 
-        comment = user_data.find_comment(user_id, post_id, comment_id)
+        comment = blog_data.find_comment(user_id, post_id, comment_id)
 
         if not comment:
             return None, 404
@@ -332,7 +350,7 @@ class SingleCommentResource(Resource):
         return comment.create_dict(), 200
 
     def delete(self, user_id, post_id, comment_id):
-        post = user_data.find_post(user_id, post_id)
+        post = blog_data.find_post(user_id, post_id)
 
         if not post:
             return None, 404
@@ -350,7 +368,7 @@ api.add_resource(
 
 class CommentLikesResource(Resource):
     def get(self, user_id, post_id, comment_id):
-        comment = user_data.find_comment(user_id, post_id, comment_id)
+        comment = blog_data.find_comment(user_id, post_id, comment_id)
 
         if not comment:
             return None, 404
@@ -365,12 +383,12 @@ class CommentLikesResource(Resource):
         if 'userID' not in data:
             return None, 400
 
-        comment = user_data.find_comment(user_id, post_id, comment_id)
+        comment = blog_data.find_comment(user_id, post_id, comment_id)
 
         if not comment:
             return None, 404
 
-        like_author = user_data.find_user(data['userID'])
+        like_author = blog_data.find_user(data['userID'])
 
         if not like_author:
             return None, 404
@@ -388,7 +406,7 @@ api.add_resource(
 
 class SingleCommentLikeResource(Resource):
     def get(self, user_id, post_id, comment_id, like_user_id):
-        comment = user_data.find_comment(user_id, post_id, comment_id)
+        comment = blog_data.find_comment(user_id, post_id, comment_id)
 
         if not comment:
             return None, 404
@@ -401,7 +419,7 @@ class SingleCommentLikeResource(Resource):
         return like.create_dict(), 200
 
     def delete(self, user_id, post_id, comment_id, like_user_id):
-        comment = user_data.find_comment(user_id, post_id, comment_id)
+        comment = blog_data.find_comment(user_id, post_id, comment_id)
 
         if not comment:
             return None, 404

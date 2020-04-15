@@ -2,8 +2,22 @@ import json
 from datetime import datetime
 from abc import ABC, abstractmethod
 
+'''
+A note on object IDs:
+
+For the convenience of testing, all object ID's are basic incremental counters
+This is only done to make testing with Postman easy and quick
+'''
 
 class BlogUsers:
+    '''
+    Interface for api.py
+
+    Gives access to the users, which has access to posts/comments/likes
+
+    Essentially using this like an ORM because of the constraint that all data
+    will be loaded through JSON
+    '''
 
     def __init__(self, users_json, posts_json):
         self.next_user_id = 0
@@ -11,9 +25,11 @@ class BlogUsers:
         self.load_users(users_json, posts_json)
 
     def load_users(self, users, posts):
+        # loads users and posts from JSON files
         with open(users) as f:
             users = json.load(f)
 
+        # load in users
         for user in users:
             new_user = self.add_user(
                 user['name'], user['about'], user['profileImage'])
@@ -25,19 +41,23 @@ class BlogUsers:
         with open(posts) as f:
             posts = json.load(f)
 
+        # load posts and associate them with their users
         for post in posts:
             user = self.find_user(post['userID'])
             new_post = user.add_post(post['content'], post['title'])
 
+            # add in the post likes
             for post_like in post['likes']:
                 like_user = self.find_user(post_like['userID'])
                 new_post.add_like(like_user)
 
+            # add in the comments on the posts
             for comment in post['comments']:
                 comment_user = self.find_user(comment['userID'])
                 new_comment = new_post.add_comment(
                     comment_user, comment['content'])
 
+                # comments can also be liked
                 for comment_like in comment['likes']:
                     comment_like_user = self.find_user(comment_like['userID'])
                     new_comment.add_like(comment_like_user)
@@ -80,8 +100,8 @@ class BlogUsers:
 
     def verify_json(self, data):
 
-        has_user_info = data.get('name') and data.get(
-            'about') and data.get('profileImage')
+        has_user_info = ( data.get('name') and data.get('about')
+                          and data.get('profileImage') )
         has_social_info = True
 
         if data.get('socialMedia'):
@@ -113,16 +133,39 @@ class BlogUsers:
 
 
 class JSONReturnable(ABC):
+    '''
+    Most objects derive from this interface
+
+    Flask allows you to return dictionaries and it handles
+    turning them into JSON, so I made a standard interface
+    for all objects that get returned
+
+    The optional parameter simple allows the dev to speciy when
+    they want only basic information about the object, e.g. when
+    they only need the user's name and id
+    '''
 
     @abstractmethod
     def create_dict(self, simple=False):
         pass
 
-# acts as it's base class and an interface
-# to the social media objects
+'''
+Most of the following objects follow a similar pattern
 
-# this pattern is repeated for posts with comments
-# and Text objects with likes
+If they have a 1 to many relationship, the 1 contains the many
+as a list. In a real codebase, this would be handled using a
+database like MySQL instead of creating lists on each object.
+
+Because this I'm loading data in from JSON for this practice,
+I chose to keep it simple. I designed the rest of the system around
+this so that each object acts like an interface to it's subobjects
+
+I.E. you can access posts through the user object, and comments
+through the post object.
+
+It's not an ideal design, but for the purpose of working with API's
+quickly it has done it's job.
+'''
 
 
 class User(JSONReturnable):
@@ -236,12 +279,23 @@ class SocialMedia(JSONReturnable):
         self.id = id
 
     def create_dict(self):
+        # Python allows you to return a dict of
+        # all attributes and their values
+
+        # this only works for SocialMedia objects
+        # because their standard JSON attribute names
+        # are the same as their python ones
+        # Other objects use snake_case and JSON
+        # is typically in camelCase
         return self.__dict__
 
 
-# Abstract class for all text objects
-# text objects all can be liked and are
-# authored by a user
+'''
+This is abstract class for Text objects
+
+Posts and comments both derive from this class, since
+both objects can be liked and share similar attributes.
+'''
 class Text(ABC):
 
     def __init__(self, user, content, id):
@@ -252,11 +306,15 @@ class Text(ABC):
         self.id = id
 
     def add_like(self, user):
+        # likes are unique!
+        # a user can't double like a post
+
+        # unlike other add_{object} methods, this one
+        # can return None
         if self.find_like(user.id):
             return None
 
         new_like = Like(user, self)
-        print(new_like)
         self.likes.append(new_like)
         return new_like
 
