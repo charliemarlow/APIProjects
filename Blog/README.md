@@ -28,13 +28,13 @@ GET /blogr/api/v1/users/[user_id]/posts/[post_id]/comments/[comment_id]/likes
 
 Everything else is accessed in a similar, hierarchical fashion. 
 
-For URL's without a specific ID (i.e. /users/[user_id]/posts)
+###### For URL's without a specific ID (i.e. /users/[user_id]/posts)
 
 GET returns all instances of that object (can be filtered with query params)
 
 POST creates a new object
 
-For URL's with a specifc ID (i.e. /users/[user_id])
+###### For URL's with a specifc ID (i.e. /users/[user_id])
 
 GET returns that specific object
 
