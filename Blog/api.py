@@ -125,6 +125,26 @@ class PostsResource(Resource):
             posts = filter(lambda post: post.title == request.args['title'],
                            posts)
 
+        # support pagination
+        if request.args.get('lastPostID'):
+            last_post_index = None
+
+            # find the post right after the last one sent
+            for i in range(len(posts)):
+                if int(request.args['lastPostID']) == posts[i].id:
+                    last_post_index = i + 1
+                    break
+
+            # check if there are any posts left to send
+            if last_post_index == None or last_post_index == len(posts):
+                return None, 400
+
+            posts = posts[last_post_index:]
+
+        # support user requesting only a certain number of pages
+        if request.args.get('numPosts'):
+            posts = posts[:int(request.args.get('numPosts'))]
+
         posts = map(lambda post: post.create_dict(), posts)
         return make_response(jsonify(list(posts)), 200)
 
